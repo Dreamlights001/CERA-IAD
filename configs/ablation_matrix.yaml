@@ -1,0 +1,142 @@
+description: Fixed CERA-IAD ablation matrix. Run on Ubuntu cloud only.
+
+ablations:
+  A0_clip_only:
+    name: A0_clip_only
+    purpose: CLIP semantic prior only; no memory, no SAM, no MLLM reflection.
+    modules:
+      encoder: clip_openai
+      candidate_generator: clip_only
+      memory_backend: exact_knn
+      mask_refiner: no_mask
+      reasoner: no_reasoner
+      calibrator: fixed_threshold
+      fusion_scorer: linear_fusion
+    scoring_override:
+      semantic: 1.0
+      rarity: 0.0
+      disagreement: 0.0
+      uncertainty: 0.0
+    output_subdir: A0_clip_only
+
+  A1_aa_clip_candidate:
+    name: A1_aa_clip_candidate
+    purpose: Replace plain CLIP proposals with AA-CLIP candidate generation.
+    modules:
+      encoder: clip_openai
+      candidate_generator: aa_clip
+      memory_backend: exact_knn
+      mask_refiner: no_mask
+      reasoner: no_reasoner
+      calibrator: fixed_threshold
+      fusion_scorer: linear_fusion
+    scoring_override:
+      semantic: 1.0
+      rarity: 0.0
+      disagreement: 0.0
+      uncertainty: 0.0
+    output_subdir: A1_aa_clip_candidate
+
+  A2_memory_rarity:
+    name: A2_memory_rarity
+    purpose: Add normal memory retrieval and rarity evidence.
+    modules:
+      encoder: clip_openai
+      candidate_generator: aa_clip
+      memory_backend: exact_knn
+      mask_refiner: no_mask
+      reasoner: no_reasoner
+      calibrator: fixed_threshold
+      fusion_scorer: linear_fusion
+    scoring_override:
+      semantic: 0.45
+      rarity: 0.45
+      disagreement: 0.10
+      uncertainty: 0.0
+    output_subdir: A2_memory_rarity
+
+  A3_conformal_gate:
+    name: A3_conformal_gate
+    purpose: Replace fixed threshold with conformal gate and review band.
+    modules:
+      encoder: clip_openai
+      candidate_generator: aa_clip
+      memory_backend: exact_knn
+      mask_refiner: no_mask
+      reasoner: no_reasoner
+      calibrator: conformal_global
+      fusion_scorer: linear_fusion
+    scoring_override:
+      semantic: 0.35
+      rarity: 0.45
+      disagreement: 0.10
+      uncertainty: 0.10
+    output_subdir: A3_conformal_gate
+
+  A4_sam_mask:
+    name: A4_sam_mask
+    purpose: Add SAM box-prompt mask geometry evidence.
+    modules:
+      encoder: clip_openai
+      candidate_generator: aa_clip
+      memory_backend: exact_knn
+      mask_refiner: sam_box
+      reasoner: no_reasoner
+      calibrator: conformal_global
+      fusion_scorer: linear_fusion
+    scoring_override:
+      semantic: 0.30
+      rarity: 0.40
+      disagreement: 0.20
+      uncertainty: 0.10
+    output_subdir: A4_sam_mask
+
+  A5_mllm_reflection:
+    name: A5_mllm_reflection
+    purpose: Add MLLM evidence reflection for review/high-conflict regions.
+    modules:
+      encoder: clip_openai
+      candidate_generator: aa_clip
+      memory_backend: exact_knn
+      mask_refiner: sam_box
+      reasoner: qwen25_vl
+      calibrator: conformal_global
+      fusion_scorer: linear_fusion
+    scoring_override:
+      semantic: 0.30
+      rarity: 0.40
+      disagreement: 0.20
+      uncertainty: 0.10
+    output_subdir: A5_mllm_reflection
+
+  A6_full_cera_iad:
+    name: A6_full_cera_iad
+    purpose: Full CERA-IAD with AA-CLIP, memory, SAM, conformal gate, and Qwen2.5-VL reflection.
+    modules:
+      encoder: clip_openai
+      candidate_generator: aa_clip
+      memory_backend: exact_knn
+      mask_refiner: sam_box
+      reasoner: qwen25_vl
+      calibrator: conformal_global
+      fusion_scorer: linear_fusion
+    scoring_override:
+      semantic: 0.30
+      rarity: 0.40
+      disagreement: 0.20
+      uncertainty: 0.10
+    output_subdir: A6_full_cera_iad
+
+optional_swaps:
+  encoder:
+    - dinov2_large
+    - anomaly_vfm
+  candidate_generator:
+    - anomaly_clip
+    - mrad
+  memory_backend:
+    - faiss_knn
+  mask_refiner:
+    - sam2_box
+  reasoner:
+    - internvl25

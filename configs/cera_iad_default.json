@@ -1,0 +1,28 @@
+{
+  "method": "CERA-IAD",
+  "score_weights": {
+    "semantic": 0.30,
+    "rarity": 0.40,
+    "disagreement": 0.20,
+    "uncertainty": 0.10
+  },
+  "retrieval_k": 5,
+  "conformal": {
+    "epsilon": 0.05,
+    "abstention_margin": 0.05
+  },
+  "reflection": {
+    "disagreement_threshold": 0.35,
+    "uncertainty_threshold": 0.50
+  },
+  "benchmarks": {
+    "primary": ["MVTec AD 2", "Real-IAD", "MMAD or MMR-AD", "M3-AD"],
+    "auxiliary": ["MVTec AD", "VisA", "MVTec LOCO AD", "Real-IAD D3", "MVTec 3D-AD"]
+  },
+  "pluggable_modules": {
+    "encoders": ["CLIP", "SigLIP", "DINOv2", "AnomalyVFM"],
+    "candidate_generators": ["AA-CLIP", "Bayes-PFL", "MRAD-style retrieval"],
+    "mask_tools": ["SAM", "SAM2"],
+    "reasoners": ["Qwen2.5-VL", "InternVL", "GPT-4o API"]
+  }
+}

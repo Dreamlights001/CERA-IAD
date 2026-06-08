@@ -1,0 +1,18 @@
+[
+  {
+    "region_id": "r00",
+    "bbox_xyxy": [8, 8, 24, 24],
+    "patch_feature": [0.01, 0.02, 0.00, -0.01],
+    "semantic_score": 0.10,
+    "uncertainty_score": 0.05,
+    "source": "example-aa-clip"
+  },
+  {
+    "region_id": "r01",
+    "bbox_xyxy": [32, 8, 48, 24],
+    "patch_feature": [0.95, 0.90, 0.85, 0.92],
+    "semantic_score": 0.72,
+    "uncertainty_score": 0.20,
+    "source": "example-aa-clip"
+  }
+]

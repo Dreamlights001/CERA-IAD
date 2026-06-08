@@ -1,0 +1,58 @@
+{
+  "primary": [
+    {
+      "name": "MVTec AD 2",
+      "role": "main-hard-benchmark",
+      "why": "New advanced scenarios; old MVTec AD and VisA are saturated.",
+      "metrics": ["Image AUROC", "Pixel AUROC", "AU-PRO", "F1", "IoU", "ECE", "AURC"]
+    },
+    {
+      "name": "Real-IAD",
+      "role": "real-world-transfer",
+      "why": "Large-scale real industrial data with multi-view properties.",
+      "metrics": ["Image AUROC", "Pixel AUROC", "AU-PRO", "retrieval purity"]
+    },
+    {
+      "name": "MMAD or MMR-AD",
+      "role": "mllm-reasoning",
+      "why": "Evaluates industrial anomaly understanding and multimodal reasoning.",
+      "metrics": ["QA accuracy", "grounding consistency", "evidence faithfulness"]
+    },
+    {
+      "name": "M3-AD",
+      "role": "reflection-multimodal",
+      "why": "Tests reflection/self-correction and multimodal anomaly reasoning.",
+      "metrics": ["reflection gain", "high-confidence error reduction", "faithfulness"]
+    }
+  ],
+  "auxiliary": [
+    {
+      "name": "MVTec AD",
+      "role": "sanity-check",
+      "why": "Classic benchmark; use to show no regression, not as main novelty."
+    },
+    {
+      "name": "VisA",
+      "role": "sanity-check",
+      "why": "Common zero/few-shot benchmark for comparability."
+    },
+    {
+      "name": "MVTec LOCO AD",
+      "role": "logical-anomaly",
+      "why": "Use when evaluating logical or structural anomalies."
+    },
+    {
+      "name": "Real-IAD D3 or MVTec 3D-AD",
+      "role": "2d-3d-extension",
+      "why": "Use after adding 2D-3D evidence retrieval."
+    }
+  ],
+  "ablations": [
+    "CLIP only",
+    "CLIP + memory retrieval",
+    "CLIP + memory + conformal calibration",
+    "CLIP + memory + SAM mask",
+    "Full CERA-IAD with MLLM evidence/reflection",
+    "Backbone swap: CLIP vs SigLIP vs DINOv2 vs AnomalyVFM"
+  ]
+}

@@ -1,0 +1,43 @@
+# Python caches
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Environments
+.venv/
+venv/
+env/
+*.egg-info/
+
+# Local/editor files
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Experiment outputs and large artifacts
+outputs/
+runs/
+wandb/
+logs/
+checkpoints/
+checkpoint*/
+*.ckpt
+*.pt
+*.pth
+*.safetensors
+*.bin
+
+# Unified model cache; keep manifest/scripts only
+weights/cache/
+
+# Datasets should live outside the repo
+data/
+datasets/
+
+# Secrets
+.env
+*.env
+secrets/
