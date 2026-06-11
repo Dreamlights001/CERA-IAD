@@ -41,7 +41,7 @@ case "${CUDA_VERSION}" in
     ;;
 esac
 
-python -m pip install -r "${IAD_ROOT}/requirements-cloud.txt"
+python -m pip install -r "${IAD_ROOT}/requirements.txt"
 
 export PYTHONPATH="${IAD_ROOT}:${PYTHONPATH:-}"
 echo "[CERA-IAD] PYTHONPATH=${PYTHONPATH}"

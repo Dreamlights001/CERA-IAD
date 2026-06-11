@@ -32,11 +32,7 @@ export IAD_WEIGHTS=/workspace/IAD/code/CERA-IAD/weights/cache
 bash scripts/cloud_prepare.sh
 ```
 
-Dependency files:
-
-- `requirements.txt`: minimal dependencies for dry-runs and feature-level utilities.
-- `requirements-cloud.txt`: full cloud experiment dependencies, excluding PyTorch wheels.
-- `environment.yml`: conda environment wrapper that installs `requirements-cloud.txt`.
+Dependencies are listed in the single `requirements.txt` file. `cloud_prepare.sh` installs PyTorch first with the CUDA-specific wheel index, then installs `requirements.txt`.
 
 Download the basic weights:
 

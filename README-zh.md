@@ -30,11 +30,7 @@ export IAD_WEIGHTS=/workspace/IAD/code/CERA-IAD/weights/cache
 bash scripts/cloud_prepare.sh
 ```
 
-依赖文件：
-
-- `requirements.txt`：dry-run 和 feature-level 工具所需的最小依赖。
-- `requirements-cloud.txt`：云端实验依赖，不包含 PyTorch CUDA wheel。
-- `environment.yml`：conda 环境封装，会安装 `requirements-cloud.txt`。
+依赖统一写在一个 `requirements.txt` 里。`cloud_prepare.sh` 会先按 CUDA 版本安装 PyTorch，再安装 `requirements.txt`。
 
 下载基础权重：
 
