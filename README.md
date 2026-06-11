@@ -4,23 +4,17 @@
 
 **CERA-IAD: Conformal Evidence-Rarity Agent for Zero-shot Industrial Anomaly Detection**
 
-CERA-IAD is a modular research codebase for zero-shot industrial anomaly detection on Ubuntu. It integrates reusable VFM/VLM backbones, top-conference anomaly detection baselines, normal-memory retrieval, conformal calibration, mask refinement, and optional MLLM evidence reflection.
+CERA-IAD is a research implementation for zero-shot industrial anomaly detection. The method combines semantic anomaly proposals, normal-memory rarity estimation, conformal calibration, mask-level localization, and optional multimodal evidence reflection into a unified evaluation pipeline.
 
-## Project Layout
+## Highlights
 
-- `cera_iad/`: the CERA-IAD Python package. The core data flow remains `RegionProposal -> NormalMemory -> CeraIAD -> ImageEvidence`.
-- `cera_iad/modules/`: module registry and experiment plan builder.
-- `configs/cera_iad_config.yaml`: main experiment configuration.
-- `configs/ablation_matrix.yaml`: fixed A0-A6 ablation matrix.
-- `weights/`: model weight manifest and Hugging Face download script. Large weights are not committed.
-- `scripts/setup_env.sh`: Ubuntu environment bootstrap script.
-- `scripts/run_cera.py`: experiment entrypoint. It currently supports dry-run and adapter plan output.
-- `scripts/run_ablation_matrix.sh`: batch launcher for ablation plans.
-- `../baselines/`: cloned and sanitized top-conference repositories reused through adapters.
+- Evidence-centric anomaly scoring with semantic, rarity, disagreement, and uncertainty signals.
+- Normal-memory retrieval for category-agnostic visual rarity estimation.
+- Conformal calibration for thresholding and review-band analysis.
+- Mask refinement with promptable segmentation models.
+- Configurable ablation protocol for isolating each component of the method.
 
-## Setup
-
-Run these commands from the project root:
+## Installation
 
 ```bash
 cd /workspace/IAD/code/CERA-IAD
@@ -30,56 +24,59 @@ conda activate cera
 bash scripts/setup_env.sh
 ```
 
-Paths are configured in `configs/cera_iad_config.yaml`. Dependencies are listed in the single `requirements.txt` file. `setup_env.sh` uses the active `cera` conda environment, installs PyTorch first with the CUDA-specific wheel index, then installs `requirements.txt`.
+The dependency list is maintained in `requirements.txt`. PyTorch is installed by `scripts/setup_env.sh` with the CUDA wheel selected for the target machine.
 
-Download the basic weights:
+## Pretrained Models
+
+Pretrained checkpoints are downloaded on demand and stored under the configured weight root in `configs/cera_iad_config.yaml`.
+
+Inspect the registry and local status:
+
+```bash
+bash weights/download_weights.sh --list
+```
+
+Preview a download plan without network access:
+
+```bash
+bash weights/download_weights.sh --dry-run --basic
+```
+
+| Model | Purpose | Required for | Group | Source |
+| --- | --- | --- | --- | --- |
+| CLIP ViT-L/14 | Semantic image/patch encoder | A0-A6 | `basic` | `openai/clip-vit-large-patch14` |
+| SAM ViT-H | Box-prompt mask refinement | A4-A6 | `basic` | `facebook/sam-vit-huge` |
+| DINOv2 Large | Language-free encoder ablation | encoder swap | `optional` | `facebook/dinov2-large` |
+| SAM2.1 Hiera Large | Mask refiner ablation | mask swap | `optional` | `facebook/sam2.1-hiera-large` |
+| Qwen2.5-VL-7B-Instruct | Evidence reflection | A5-A6 | `mllm` | `Qwen/Qwen2.5-VL-7B-Instruct` |
+| InternVL2.5-8B | Reasoner ablation | reasoner swap | `mllm` | `OpenGVLab/InternVL2_5-8B` |
+| AnomalyVFM checkpoints | Encoder ablation | manual swap | `manual` | Follow upstream checkpoint instructions |
+
+Download checkpoints by group:
 
 ```bash
 bash weights/download_weights.sh --basic
-```
-
-Download MLLM reflection weights:
-
-```bash
+bash weights/download_weights.sh --optional
 bash weights/download_weights.sh --mllm
 ```
 
-Download optional swap-module weights:
+Each completed model directory contains `.cera_weight.json` with the source repository, download time, usage tags, and local file count.
 
-```bash
-bash weights/download_weights.sh --optional
+## Data Preparation
+
+Dataset paths are configured in `configs/cera_iad_config.yaml`. The default root is `../../data`:
+
+```text
+data/
+  MVTec-AD/
+  MVTec-AD-2/
+  VisA/
+  Real-IAD/
+  MMAD/
+  M3-AD/
 ```
 
-## Module Swaps
-
-The default modules are configured in `configs/cera_iad_config.yaml`:
-
-```yaml
-modules:
-  encoder: clip_openai
-  candidate_generator: aa_clip
-  memory_backend: exact_knn
-  mask_refiner: sam_box
-  reasoner: no_reasoner
-  calibrator: conformal_global
-  fusion_scorer: linear_fusion
-```
-
-Available modules are registered in `cera_iad/modules/registry.py`:
-
-- `encoder`: `clip_openai`, `dinov2_large`, `anomaly_vfm`
-- `candidate_generator`: `clip_only`, `aa_clip`, `anomaly_clip`, `mrad`
-- `memory_backend`: `exact_knn`, `faiss_knn`
-- `mask_refiner`: `no_mask`, `sam_box`, `sam2_box`
-- `reasoner`: `no_reasoner`, `qwen25_vl`, `internvl25`
-- `calibrator`: `fixed_threshold`, `conformal_global`
-- `fusion_scorer`: `linear_fusion`
-
-The design principle is to reuse foundation models and top-conference code from `../baselines/` or Hugging Face/package APIs. CERA-IAD should only provide adapters that convert upstream outputs into `RegionProposal`, `ImageEvidence`, and metrics JSON.
-
-## Ablation Experiments
-
-Ablations are defined in `configs/ablation_matrix.yaml`.
+## Running Experiments
 
 Dry-run a single ablation:
 
@@ -96,56 +93,37 @@ Generate all ablation plans:
 bash scripts/run_ablation_matrix.sh
 ```
 
-Ablation items:
+The A0-A6 protocol is defined in `configs/ablation_matrix.yaml`:
 
-- `A0_clip_only`: CLIP semantic prior only.
-- `A1_aa_clip_candidate`: replace plain CLIP proposals with AA-CLIP candidates.
-- `A2_memory_rarity`: add normal memory retrieval and rarity evidence.
-- `A3_conformal_gate`: add conformal gate and review band.
-- `A4_sam_mask`: add SAM box-prompt mask geometry evidence.
-- `A5_mllm_reflection`: add Qwen2.5-VL evidence reflection.
-- `A6_full_cera_iad`: full CERA-IAD.
+| ID | Description |
+| --- | --- |
+| A0 | CLIP semantic prior |
+| A1 | Anomaly-aware candidate generation |
+| A2 | Normal-memory rarity evidence |
+| A3 | Conformal calibration |
+| A4 | SAM-based mask refinement |
+| A5 | MLLM evidence reflection |
+| A6 | Full CERA-IAD |
 
-To replace an intermediate module for an ablation, edit the corresponding `modules` block in `configs/ablation_matrix.yaml`. Avoid hard-coding module choices in scripts.
+## Results
 
-## Weights and Data
+Benchmark results will be reported after the full evaluation run.
 
-Weights are managed by `weights/weights_manifest.yaml`. Downloads prefer Hugging Face:
+| Dataset | Image AUROC | Pixel AUROC | AU-PRO | ECE | AURC |
+| --- | --- | --- | --- | --- | --- |
+| MVTec AD 2 | TBD | TBD | TBD | TBD | TBD |
+| Real-IAD | TBD | TBD | TBD | TBD | TBD |
+| MMAD | TBD | TBD | TBD | TBD | TBD |
+| M3-AD | TBD | TBD | TBD | TBD | TBD |
 
-- CLIP: `openai/clip-vit-large-patch14`
-- DINOv2: `facebook/dinov2-large`
-- SAM: `facebook/sam-vit-huge`
-- SAM2.1: `facebook/sam2.1-hiera-large`
-- Qwen2.5-VL: `Qwen/Qwen2.5-VL-7B-Instruct`
-- InternVL2.5: `OpenGVLab/InternVL2_5-8B`
+## Project Layout
 
-Datasets are not downloaded by the scripts. The default dataset root is configured as `../../data` in `configs/cera_iad_config.yaml`:
+- `cera_iad/`: core package and method components.
+- `configs/`: experiment configuration and ablation matrix.
+- `scripts/`: environment setup and experiment entrypoints.
+- `weights/`: pretrained model registry and download utilities.
+- `tests/`: static and dry-run checks.
 
-```text
-/data/iad/
-  MVTec-AD/
-  MVTec-AD-2/
-  VisA/
-  Real-IAD/
-  MMAD/
-  M3-AD/
-```
+## Acknowledgements
 
-## Outputs
-
-The default output root is configured in `configs/cera_iad_config.yaml`:
-
-```bash
-../../outputs/cera_experiments
-```
-
-Recommended artifacts:
-
-- `features/normal_memory.npy`
-- `calibration/normal_scores.json`
-- `proposals/*.json`
-- `evidence/*.json`
-- `metrics/*.json`
-- `plans/A0_clip_only.json` through `plans/A6_full_cera_iad.json`
-
-The final paper method should be selected according to `../../reviews/cera_iad_method_validation_zh.html`: if a module only improves the old MVTec benchmark but not MVTec AD 2 / Real-IAD, or if it significantly hurts calibration, downgrade it to an optional module rather than including it in the main method.
+CERA-IAD uses public foundation models and may interoperate with external anomaly detection baselines for comparison or optional adapters. Please cite the corresponding upstream works when using their models, checkpoints, or code.

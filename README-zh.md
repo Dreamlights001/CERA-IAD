@@ -4,21 +4,17 @@
 
 **CERA-IAD: Conformal Evidence-Rarity Agent for Zero-shot Industrial Anomaly Detection**
 
-CERA-IAD 是面向 Ubuntu 的零样本工业异常检测研究代码库，集成可复用的 VFM/VLM backbone、顶会异常检测基线、正常记忆检索、conformal 校准、mask refinement，以及可选的 MLLM evidence reflection。
+CERA-IAD 是一个面向零样本工业异常检测的研究代码库。方法将语义异常候选、正常样本记忆检索、conformal calibration、mask 级定位和可选的多模态证据反思整合到统一评测流程中。
 
-## 目录结构
+## 方法亮点
 
-- `cera_iad/`：CERA-IAD Python package。核心链路仍是 `RegionProposal -> NormalMemory -> CeraIAD -> ImageEvidence`。
-- `cera_iad/modules/`：模块注册表和实验计划生成器。
-- `configs/cera_iad_config.yaml`：总实验配置。
-- `configs/ablation_matrix.yaml`：A0-A6 消融矩阵。
-- `weights/`：统一预训练权重 manifest 和 Hugging Face 下载脚本，不提交大权重。
-- `scripts/setup_env.sh`：Ubuntu 环境准备脚本。
-- `scripts/run_cera.py`：实验入口。当前支持 dry-run 和 adapter 计划输出。
-- `scripts/run_ablation_matrix.sh`：批量生成/运行消融计划的入口。
-- `baselines/`：已克隆并清理 Git 信息的顶会代码，用于 adapter 复用。
+- 基于 evidence 的异常评分，融合 semantic、rarity、disagreement 和 uncertainty 信号。
+- 使用 normal memory retrieval 估计跨类别视觉稀有性。
+- 使用 conformal calibration 支持阈值校准和 review band 分析。
+- 使用可提示分割模型进行 mask refinement。
+- 提供 A0-A6 消融协议，便于逐项分析方法组件。
 
-## 环境准备
+## 环境安装
 
 ```bash
 cd /workspace/IAD/code/CERA-IAD
@@ -28,56 +24,59 @@ conda activate cera
 bash scripts/setup_env.sh
 ```
 
-所有路径统一在 `configs/cera_iad_config.yaml` 中配置。依赖统一写在一个 `requirements.txt` 里。`setup_env.sh` 使用当前激活的 `cera` conda 环境，先按 CUDA 版本安装 PyTorch，再安装 `requirements.txt`。
+依赖统一维护在 `requirements.txt` 中。`scripts/setup_env.sh` 会根据目标机器的 CUDA 配置先安装 PyTorch，再安装项目依赖。
 
-下载基础权重：
+## 预训练权重
+
+预训练权重按需下载，下载根目录由 `configs/cera_iad_config.yaml` 中的 `paths.weights_root` 控制。
+
+查看权重清单和本地状态：
+
+```bash
+bash weights/download_weights.sh --list
+```
+
+预览下载计划，不访问网络：
+
+```bash
+bash weights/download_weights.sh --dry-run --basic
+```
+
+| Model | Purpose | Required for | Group | Source |
+| --- | --- | --- | --- | --- |
+| CLIP ViT-L/14 | 语义图像/patch 编码器 | A0-A6 | `basic` | `openai/clip-vit-large-patch14` |
+| SAM ViT-H | box-prompt mask refinement | A4-A6 | `basic` | `facebook/sam-vit-huge` |
+| DINOv2 Large | language-free encoder 消融 | encoder swap | `optional` | `facebook/dinov2-large` |
+| SAM2.1 Hiera Large | mask refiner 消融 | mask swap | `optional` | `facebook/sam2.1-hiera-large` |
+| Qwen2.5-VL-7B-Instruct | evidence reflection | A5-A6 | `mllm` | `Qwen/Qwen2.5-VL-7B-Instruct` |
+| InternVL2.5-8B | reasoner 消融 | reasoner swap | `mllm` | `OpenGVLab/InternVL2_5-8B` |
+| AnomalyVFM checkpoints | encoder 消融 | manual swap | `manual` | 按上游 checkpoint 说明配置 |
+
+按组下载：
 
 ```bash
 bash weights/download_weights.sh --basic
-```
-
-下载 MLLM 反思消融权重：
-
-```bash
+bash weights/download_weights.sh --optional
 bash weights/download_weights.sh --mllm
 ```
 
-可选替换模块权重：
+每个下载完成的模型目录都会包含 `.cera_weight.json`，记录来源仓库、下载时间、用途标签和本地文件数量。
 
-```bash
-bash weights/download_weights.sh --optional
+## 数据准备
+
+数据集路径在 `configs/cera_iad_config.yaml` 中配置。默认根目录为 `../../data`：
+
+```text
+data/
+  MVTec-AD/
+  MVTec-AD-2/
+  VisA/
+  Real-IAD/
+  MMAD/
+  M3-AD/
 ```
 
-## 模块替换方式
-
-默认模块在 `configs/cera_iad_config.yaml`：
-
-```yaml
-modules:
-  encoder: clip_openai
-  candidate_generator: aa_clip
-  memory_backend: exact_knn
-  mask_refiner: sam_box
-  reasoner: no_reasoner
-  calibrator: conformal_global
-  fusion_scorer: linear_fusion
-```
-
-可替换项由 `cera_iad/modules/registry.py` 注册：
-
-- `encoder`：`clip_openai`、`dinov2_large`、`anomaly_vfm`
-- `candidate_generator`：`clip_only`、`aa_clip`、`anomaly_clip`、`mrad`
-- `memory_backend`：`exact_knn`、`faiss_knn`
-- `mask_refiner`：`no_mask`、`sam_box`、`sam2_box`
-- `reasoner`：`no_reasoner`、`qwen25_vl`、`internvl25`
-- `calibrator`：`fixed_threshold`、`conformal_global`
-- `fusion_scorer`：`linear_fusion`
-
-设计原则：底层模型和顶会方法优先复用 `baselines/` 或 Hugging Face/package 接口，CERA-IAD 只写 adapter，把输出统一转换为 `RegionProposal`、`ImageEvidence` 和 metrics JSON。
-
-## 消融实验
-
-消融定义在 `configs/ablation_matrix.yaml`。
+## 运行实验
 
 单个消融 dry-run：
 
@@ -88,62 +87,43 @@ python scripts/run_cera.py \
   --dry-run
 ```
 
-批量生成消融计划：
+生成全部消融计划：
 
 ```bash
 bash scripts/run_ablation_matrix.sh
 ```
 
-消融项：
+A0-A6 协议定义在 `configs/ablation_matrix.yaml`：
 
-- `A0_clip_only`：仅 CLIP 语义先验。
-- `A1_aa_clip_candidate`：替换为 AA-CLIP 候选区域。
-- `A2_memory_rarity`：加入正常记忆检索和 rarity evidence。
-- `A3_conformal_gate`：加入 conformal gate 和 review band。
-- `A4_sam_mask`：加入 SAM box-prompt mask geometry evidence。
-- `A5_mllm_reflection`：加入 Qwen2.5-VL evidence reflection。
-- `A6_full_cera_iad`：完整 CERA-IAD。
+| ID | Description |
+| --- | --- |
+| A0 | CLIP semantic prior |
+| A1 | anomaly-aware candidate generation |
+| A2 | normal-memory rarity evidence |
+| A3 | conformal calibration |
+| A4 | SAM-based mask refinement |
+| A5 | MLLM evidence reflection |
+| A6 | full CERA-IAD |
 
-更换中间模块时，优先改 `ablation_matrix.yaml` 中对应消融项的 `modules`，不要在脚本里硬编码。
+## 结果
 
-## 权重和数据
+完整评测完成后在此更新 benchmark 结果。
 
-权重统一由 `weights/weights_manifest.yaml` 管理，下载脚本尽量使用 Hugging Face：
+| Dataset | Image AUROC | Pixel AUROC | AU-PRO | ECE | AURC |
+| --- | --- | --- | --- | --- | --- |
+| MVTec AD 2 | TBD | TBD | TBD | TBD | TBD |
+| Real-IAD | TBD | TBD | TBD | TBD | TBD |
+| MMAD | TBD | TBD | TBD | TBD | TBD |
+| M3-AD | TBD | TBD | TBD | TBD | TBD |
 
-- CLIP：`openai/clip-vit-large-patch14`
-- DINOv2：`facebook/dinov2-large`
-- SAM：`facebook/sam-vit-huge`
-- SAM2.1：`facebook/sam2.1-hiera-large`
-- Qwen2.5-VL：`Qwen/Qwen2.5-VL-7B-Instruct`
-- InternVL2.5：`OpenGVLab/InternVL2_5-8B`
+## 目录结构
 
-数据集不由脚本下载。默认数据根目录在 `configs/cera_iad_config.yaml` 中配置为 `../../data`：
+- `cera_iad/`：核心方法包。
+- `configs/`：实验配置和消融矩阵。
+- `scripts/`：环境安装与实验入口。
+- `weights/`：预训练权重清单和下载工具。
+- `tests/`：静态检查和 dry-run 检查。
 
-```text
-/data/iad/
-  MVTec-AD/
-  MVTec-AD-2/
-  VisA/
-  Real-IAD/
-  MMAD/
-  M3-AD/
-```
+## 致谢
 
-## 输出
-
-默认输出根目录在 `configs/cera_iad_config.yaml` 中配置：
-
-```bash
-../../outputs/cera_experiments
-```
-
-建议保存：
-
-- `features/normal_memory.npy`
-- `calibration/normal_scores.json`
-- `proposals/*.json`
-- `evidence/*.json`
-- `metrics/*.json`
-- `plans/A0_clip_only.json` 到 `plans/A6_full_cera_iad.json`
-
-正式论文筛选规则来自 `reviews/cera_iad_method_validation_zh.html`：如果模块只提升老 MVTec，不提升 MVTec AD 2 / Real-IAD，或显著伤害 calibration，就降级为 optional，不进入主方法。
+CERA-IAD 使用公开基础模型，并可与外部异常检测 baseline 进行对比或可选适配。使用对应模型、checkpoint 或代码时，请同时引用其上游论文和仓库。

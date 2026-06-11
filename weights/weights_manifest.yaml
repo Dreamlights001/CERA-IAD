@@ -1,9 +1,11 @@
 weights_root: weights/cache
-download_backend: huggingface-cli
+download_backend: huggingface_hub
 
 models:
   clip_vit_l_14:
+    display_name: CLIP ViT-L/14
     group: basic
+    required: true
     required_for:
       - A0_clip_only
       - A1_aa_clip_candidate
@@ -14,55 +16,81 @@ models:
       - A6_full_cera_iad
     hf_repo: openai/clip-vit-large-patch14
     target_dir: clip/openai-clip-vit-large-patch14
+    size_hint: medium
+    license_note: See the Hugging Face model card for OpenAI CLIP terms.
     note: Shared CLIP backbone; also usable by open_clip adapters.
 
   dinov2_large:
+    display_name: DINOv2 Large
     group: optional
+    required: false
     required_for:
       - encoder_swap_dinov2_large
     hf_repo: facebook/dinov2-large
     target_dir: dinov2/facebook-dinov2-large
+    size_hint: medium
+    license_note: See the Hugging Face model card for DINOv2 terms.
     note: Language-free encoder ablation.
 
   sam_vit_h:
+    display_name: SAM ViT-H
     group: basic
+    required: true
     required_for:
       - A4_sam_mask
       - A5_mllm_reflection
       - A6_full_cera_iad
     hf_repo: facebook/sam-vit-huge
     target_dir: sam/facebook-sam-vit-huge
+    size_hint: large
+    license_note: See the Hugging Face model card for SAM terms.
     note: SAM box/point prompt mask refinement.
 
   sam2_1_hiera_large:
+    display_name: SAM2.1 Hiera Large
     group: optional
+    required: false
     required_for:
       - mask_swap_sam2_box
     hf_repo: facebook/sam2.1-hiera-large
     target_dir: sam2/facebook-sam2.1-hiera-large
+    size_hint: large
+    license_note: See the Hugging Face model card for SAM2.1 terms.
     note: SAM2.1 mask refinement ablation.
 
   qwen25_vl_7b:
+    display_name: Qwen2.5-VL-7B-Instruct
     group: mllm
+    required: false
     required_for:
       - A5_mllm_reflection
       - A6_full_cera_iad
     hf_repo: Qwen/Qwen2.5-VL-7B-Instruct
     target_dir: mllm/Qwen2.5-VL-7B-Instruct
+    size_hint: very large
+    license_note: See the Hugging Face model card for Qwen2.5-VL terms.
     note: Default evidence reflection model. Large download.
 
   internvl25_8b:
+    display_name: InternVL2.5-8B
     group: mllm
+    required: false
     required_for:
       - reasoner_swap_internvl25
     hf_repo: OpenGVLab/InternVL2_5-8B
     target_dir: mllm/InternVL2_5-8B
+    size_hint: very large
+    license_note: See the Hugging Face model card for InternVL2.5 terms.
     note: Optional MLLM reasoner ablation.
 
   anomaly_vfm_optional:
-    group: optional
+    display_name: AnomalyVFM Checkpoints
+    group: manual
+    required: false
     required_for:
       - encoder_swap_anomaly_vfm
     hf_repo: null
     target_dir: anomaly_vfm
+    size_hint: upstream dependent
+    license_note: Follow the upstream AnomalyVFM checkpoint license.
     note: Follow ../baselines/AnomalyVFM README if upstream releases separate checkpoints.
