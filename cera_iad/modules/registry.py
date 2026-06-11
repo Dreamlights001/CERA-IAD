@@ -9,8 +9,8 @@ from typing import Any
 class ModuleSpec:
     """Lightweight descriptor for a replaceable CERA-IAD module.
 
-    The registry stores provenance and cloud command templates only. Heavy
-    model imports and inference are intentionally kept out of local execution.
+    The registry stores provenance and command templates only. Heavy model
+    imports and inference are intentionally left to adapter implementations.
     """
 
     name: str
@@ -93,9 +93,9 @@ REGISTRY: dict[str, ModuleSpec] = {
     "faiss_knn": ModuleSpec(
         name="faiss_knn",
         kind="memory_backend",
-        source="faiss-gpu/faiss-cpu optional cloud dependency",
+        source="faiss-gpu/faiss-cpu optional dependency",
         command_hint="build FAISS index from normal memory features",
-        notes="Large-scale cloud ablation; falls back to exact_knn if unavailable.",
+        notes="Large-scale ablation; falls back to exact_knn if unavailable.",
     ),
     "no_mask": ModuleSpec(
         name="no_mask",
@@ -170,7 +170,7 @@ def registry_snapshot() -> dict[str, dict[str, Any]]:
     return {name: spec.to_dict() for name, spec in sorted(REGISTRY.items())}
 
 
-def build_cloud_plan(config: dict[str, Any], ablation: dict[str, Any] | None = None) -> dict[str, Any]:
+def build_experiment_plan(config: dict[str, Any], ablation: dict[str, Any] | None = None) -> dict[str, Any]:
     """Resolve configured module names into a serializable dry-run plan."""
 
     modules = dict(config.get("modules", {}))
@@ -201,8 +201,7 @@ def build_cloud_plan(config: dict[str, Any], ablation: dict[str, Any] | None = N
         "outputs": config.get("outputs", {}),
         "output_subdir": output_subdir,
         "scoring": scoring,
-        "cloud_only": True,
-        "execution_note": "This plan is safe for local dry-run; model inference is intended for Ubuntu cloud.",
+        "execution_note": "Use --dry-run to validate configuration before running full adapter commands.",
     }
 
 

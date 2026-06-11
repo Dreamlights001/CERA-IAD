@@ -7,7 +7,7 @@ from cera_iad.core.conformal import ConformalGate
 from cera_iad.core.memory import NormalMemory
 from cera_iad.core.pipeline import CeraIAD
 from cera_iad.evaluation.metrics import abstention_gain, expected_calibration_error
-from cera_iad.modules.registry import build_cloud_plan, registry_snapshot
+from cera_iad.modules.registry import build_experiment_plan, registry_snapshot
 
 
 def test_conformal_gate_orders_decisions() -> None:
@@ -38,7 +38,7 @@ def test_metrics_are_bounded() -> None:
     assert gain >= 0.0
 
 
-def test_cloud_plan_resolves_ablation_modules_without_heavy_imports() -> None:
+def test_experiment_plan_resolves_ablation_modules_without_heavy_imports() -> None:
     config = {
         "method": "CERA-IAD",
         "modules": {
@@ -58,7 +58,7 @@ def test_cloud_plan_resolves_ablation_modules_without_heavy_imports() -> None:
             "reasoner": "qwen25_vl",
         },
     }
-    plan = build_cloud_plan(config, ablation)
+    plan = build_experiment_plan(config, ablation)
     assert plan["ablation"] == "A5_mllm_reflection"
     assert plan["modules"]["reasoner"]["name"] == "qwen25_vl"
     assert "qwen25_vl_7b" in plan["required_weights"]

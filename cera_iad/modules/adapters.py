@@ -6,8 +6,8 @@ from pathlib import Path
 class CloudAdapterCommand:
     """Command template for upstream baseline integration.
 
-    This object deliberately does not execute commands. The cloud runner uses it
-    to document and assemble steps after datasets and weights exist on Ubuntu.
+    This object deliberately does not execute commands. The experiment runner
+    uses it to document and assemble steps after datasets and weights exist.
     """
 
     def __init__(self, name: str, baseline_dir: str | None, command: list[str]) -> None:
@@ -29,14 +29,14 @@ def proposal_converter_command(
     input_dir: str,
     output_json: str,
 ) -> CloudAdapterCommand:
-    """Return the intended cloud conversion command for proposal adapters."""
+    """Return the intended conversion command for proposal adapters."""
 
     return CloudAdapterCommand(
         name=f"{module_name}_to_region_proposals",
         baseline_dir=baseline_dir,
         command=[
             "python",
-            "scripts/run_cera_cloud.py",
+            "scripts/run_cera.py",
             "--adapter-only",
             module_name,
             "--input-dir",

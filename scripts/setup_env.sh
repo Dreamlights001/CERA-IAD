@@ -4,9 +4,9 @@ set -euo pipefail
 ENV_NAME="${CERA_ENV_NAME:-cera-iad}"
 PYTHON_VERSION="${PYTHON_VERSION:-3.10}"
 CUDA_VERSION="${CUDA_VERSION:-cu121}"
-IAD_ROOT="${IAD_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}"
+PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
-echo "[CERA-IAD] root: ${IAD_ROOT}"
+echo "[CERA-IAD] root: ${PROJECT_ROOT}"
 echo "[CERA-IAD] env: ${ENV_NAME}, python: ${PYTHON_VERSION}, cuda: ${CUDA_VERSION}"
 
 if ! command -v conda >/dev/null 2>&1; then
@@ -41,8 +41,8 @@ case "${CUDA_VERSION}" in
     ;;
 esac
 
-python -m pip install -r "${IAD_ROOT}/requirements.txt"
+python -m pip install -r "${PROJECT_ROOT}/requirements.txt"
 
-export PYTHONPATH="${IAD_ROOT}:${PYTHONPATH:-}"
+export PYTHONPATH="${PROJECT_ROOT}:${PYTHONPATH:-}"
 echo "[CERA-IAD] PYTHONPATH=${PYTHONPATH}"
 echo "[CERA-IAD] environment ready. Activate with: conda activate ${ENV_NAME}"

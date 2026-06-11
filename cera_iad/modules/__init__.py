@@ -1,5 +1,5 @@
-"""Config-driven module registry for cloud CERA-IAD experiments."""
+"""Config-driven module registry for CERA-IAD experiments."""
 
-from cera_iad.modules.registry import ModuleSpec, build_cloud_plan, registry_snapshot
+from cera_iad.modules.registry import ModuleSpec, build_experiment_plan, registry_snapshot
 
-__all__ = ["ModuleSpec", "build_cloud_plan", "registry_snapshot"]
+__all__ = ["ModuleSpec", "build_experiment_plan", "registry_snapshot"]

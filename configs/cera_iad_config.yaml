@@ -1,0 +1,76 @@
+﻿method: CERA-IAD
+description: Main configuration for modular CERA-IAD experiments on Ubuntu.
+
+runtime:
+  device: cuda
+  seed: 20260608
+  precision: fp16
+  num_workers: 8
+  local_execution_policy: dry_run_only
+
+paths:
+  repo_root: .
+  weights_root: weights/cache
+  data_root: ../../data
+  output_root: ../../outputs/cera_experiments
+  baselines_root: ../baselines
+
+data:
+  primary_benchmarks:
+    - mvtec_ad_2
+    - real_iad
+    - mmad
+    - m3_ad
+  auxiliary_benchmarks:
+    - mvtec_ad
+    - visa
+    - mvtec_loco_ad
+    - real_iad_d3
+    - mvtec_3d_ad
+  splits:
+    normal_memory: train_normal
+    calibration: val_normal
+    test: test
+  dataset_paths:
+    mvtec_ad: ../../data/MVTec-AD
+    mvtec_ad_2: ../../data/MVTec-AD-2
+    visa: ../../data/VisA
+    real_iad: ../../data/Real-IAD
+    mmad: ../../data/MMAD
+    m3_ad: ../../data/M3-AD
+
+modules:
+  encoder: clip_openai
+  candidate_generator: aa_clip
+  memory_backend: exact_knn
+  mask_refiner: sam_box
+  reasoner: no_reasoner
+  calibrator: conformal_global
+  fusion_scorer: linear_fusion
+
+scoring:
+  semantic: 0.30
+  rarity: 0.40
+  disagreement: 0.20
+  uncertainty: 0.10
+  retrieval_k: 5
+  conformal:
+    epsilon: 0.05
+    abstention_margin: 0.05
+  reflection:
+    disagreement_threshold: 0.35
+    uncertainty_threshold: 0.50
+
+artifacts:
+  memory_features: ../../outputs/cera_experiments/features/normal_memory.npy
+  calibration_scores: ../../outputs/cera_experiments/calibration/normal_scores.json
+  proposals_dir: ../../outputs/cera_experiments/proposals
+  evidence_dir: ../../outputs/cera_experiments/evidence
+  metrics_dir: ../../outputs/cera_experiments/metrics
+
+outputs:
+  save_region_json: true
+  save_reasoner_json: true
+  save_visual_overlays: true
+  save_retrieval_panels: true
+

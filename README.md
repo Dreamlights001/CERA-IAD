@@ -1,38 +1,34 @@
-# CERA-IAD Cloud Experiment Project
+# CERA-IAD
 
 [English](README.md) | [中文](README-zh.md)
 
 **CERA-IAD: Conformal Evidence-Rarity Agent for Zero-shot Industrial Anomaly Detection**
 
-This directory contains the cloud experiment scaffold for CERA-IAD. Local Windows development is used only for code organization, configuration checks, and documentation. Feature extraction, proposal generation, SAM/MLLM inference, and full ablation experiments are intended to run on an Ubuntu + CUDA cloud server.
+CERA-IAD is a modular research codebase for zero-shot industrial anomaly detection on Ubuntu. It integrates reusable VFM/VLM backbones, top-conference anomaly detection baselines, normal-memory retrieval, conformal calibration, mask refinement, and optional MLLM evidence reflection.
 
 ## Project Layout
 
 - `cera_iad/`: the CERA-IAD Python package. The core data flow remains `RegionProposal -> NormalMemory -> CeraIAD -> ImageEvidence`.
-- `cera_iad/modules/`: module registry and cloud dry-run plan builder.
-- `configs/cera_iad_cloud.yaml`: default cloud experiment configuration.
+- `cera_iad/modules/`: module registry and experiment plan builder.
+- `configs/cera_iad_config.yaml`: main experiment configuration.
 - `configs/ablation_matrix.yaml`: fixed A0-A6 ablation matrix.
 - `weights/`: model weight manifest and Hugging Face download script. Large weights are not committed.
-- `scripts/cloud_prepare.sh`: Ubuntu environment bootstrap script.
-- `scripts/run_cera_cloud.py`: cloud entrypoint. It currently supports safe dry-run and adapter plan output.
+- `scripts/setup_env.sh`: Ubuntu environment bootstrap script.
+- `scripts/run_cera.py`: experiment entrypoint. It currently supports dry-run and adapter plan output.
 - `scripts/run_ablation_matrix.sh`: batch launcher for ablation plans.
 - `../baselines/`: cloned and sanitized top-conference repositories reused through adapters.
 
-## Cloud Setup
+## Setup
 
-Run these commands on the Ubuntu cloud server:
+Run these commands from the project root:
 
 ```bash
 cd /workspace/IAD/code/CERA-IAD
-export IAD_ROOT=/workspace/IAD/code/CERA-IAD
-export IAD_DATA=/data/iad
-export IAD_OUTPUTS=/workspace/IAD/outputs/cera_cloud
-export IAD_WEIGHTS=/workspace/IAD/code/CERA-IAD/weights/cache
 
-bash scripts/cloud_prepare.sh
+bash scripts/setup_env.sh
 ```
 
-Dependencies are listed in the single `requirements.txt` file. `cloud_prepare.sh` installs PyTorch first with the CUDA-specific wheel index, then installs `requirements.txt`.
+Paths are configured in `configs/cera_iad_config.yaml`. Dependencies are listed in the single `requirements.txt` file. `setup_env.sh` installs PyTorch first with the CUDA-specific wheel index, then installs `requirements.txt`.
 
 Download the basic weights:
 
@@ -54,7 +50,7 @@ bash weights/download_weights.sh --optional
 
 ## Module Swaps
 
-The default modules are configured in `configs/cera_iad_cloud.yaml`:
+The default modules are configured in `configs/cera_iad_config.yaml`:
 
 ```yaml
 modules:
@@ -86,8 +82,8 @@ Ablations are defined in `configs/ablation_matrix.yaml`.
 Dry-run a single ablation:
 
 ```bash
-python scripts/run_cera_cloud.py \
-  --config configs/cera_iad_cloud.yaml \
+python scripts/run_cera.py \
+  --config configs/cera_iad_config.yaml \
   --ablation A0_clip_only \
   --dry-run
 ```
@@ -121,7 +117,7 @@ Weights are managed by `weights/weights_manifest.yaml`. Downloads prefer Hugging
 - Qwen2.5-VL: `Qwen/Qwen2.5-VL-7B-Instruct`
 - InternVL2.5: `OpenGVLab/InternVL2_5-8B`
 
-Datasets are not downloaded by the scripts. Place them under `IAD_DATA` on the cloud server:
+Datasets are not downloaded by the scripts. The default dataset root is configured as `../../data` in `configs/cera_iad_config.yaml`:
 
 ```text
 /data/iad/
@@ -135,10 +131,10 @@ Datasets are not downloaded by the scripts. Place them under `IAD_DATA` on the c
 
 ## Outputs
 
-The default output root is:
+The default output root is configured in `configs/cera_iad_config.yaml`:
 
 ```bash
-${IAD_OUTPUTS:-outputs/cera_cloud}
+../../outputs/cera_experiments
 ```
 
 Recommended artifacts:

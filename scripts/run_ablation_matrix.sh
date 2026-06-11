@@ -1,9 +1,22 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-CONFIG="${CONFIG:-configs/cera_iad_cloud.yaml}"
+CONFIG="${CONFIG:-configs/cera_iad_config.yaml}"
 MATRIX="${MATRIX:-configs/ablation_matrix.yaml}"
-OUTPUT_ROOT="${IAD_OUTPUTS:-outputs/cera_cloud}/plans"
+OUTPUT_ROOT="$(python - "${CONFIG}" <<'PY'
+from pathlib import Path
+import sys
+import yaml
+
+config_path = Path(sys.argv[1])
+config = yaml.safe_load(config_path.read_text(encoding="utf-8")) or {}
+project_root = config_path.resolve().parent.parent
+output_root = Path(config.get("paths", {}).get("output_root", "../../outputs/cera_experiments"))
+if not output_root.is_absolute():
+    output_root = (project_root / output_root).resolve()
+print(output_root / "plans")
+PY
+)"
 
 ABLATIONS=(
   A0_clip_only
@@ -19,7 +32,7 @@ mkdir -p "${OUTPUT_ROOT}"
 
 for ablation in "${ABLATIONS[@]}"; do
   echo "[CERA-IAD] resolving ${ablation}"
-  python scripts/run_cera_cloud.py \
+  python scripts/run_cera.py \
     --config "${CONFIG}" \
     --ablation-matrix "${MATRIX}" \
     --ablation "${ablation}" \
@@ -27,4 +40,4 @@ for ablation in "${ABLATIONS[@]}"; do
     --output-plan "${OUTPUT_ROOT}/${ablation}.json"
 done
 
-echo "[CERA-IAD] dry-run plans written to ${OUTPUT_ROOT}"
+echo "[CERA-IAD] plans written to ${OUTPUT_ROOT}"

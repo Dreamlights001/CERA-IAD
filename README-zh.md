@@ -1,36 +1,32 @@
-# CERA-IAD 云端实验工程
+# CERA-IAD
 
 [English](README.md) | [中文](README-zh.md)
 
 **CERA-IAD: Conformal Evidence-Rarity Agent for Zero-shot Industrial Anomaly Detection**
 
-本目录现在是云服务器实验工程骨架。本地 Windows 只用于代码整理、配置检查和文档维护；正式特征提取、候选区域生成、SAM/MLLM 推理和消融实验都放到 Ubuntu + CUDA 云服务器运行。
+CERA-IAD 是面向 Ubuntu 的零样本工业异常检测研究代码库，集成可复用的 VFM/VLM backbone、顶会异常检测基线、正常记忆检索、conformal 校准、mask refinement，以及可选的 MLLM evidence reflection。
 
 ## 目录结构
 
 - `cera_iad/`：CERA-IAD Python package。核心链路仍是 `RegionProposal -> NormalMemory -> CeraIAD -> ImageEvidence`。
-- `cera_iad/modules/`：模块注册表和云端 dry-run 计划生成器。
-- `configs/cera_iad_cloud.yaml`：正式云端默认配置。
+- `cera_iad/modules/`：模块注册表和实验计划生成器。
+- `configs/cera_iad_config.yaml`：总实验配置。
 - `configs/ablation_matrix.yaml`：A0-A6 消融矩阵。
 - `weights/`：统一预训练权重 manifest 和 Hugging Face 下载脚本，不提交大权重。
-- `scripts/cloud_prepare.sh`：Ubuntu 环境准备脚本。
-- `scripts/run_cera_cloud.py`：云端入口。当前支持安全 dry-run 和 adapter 计划输出。
+- `scripts/setup_env.sh`：Ubuntu 环境准备脚本。
+- `scripts/run_cera.py`：实验入口。当前支持 dry-run 和 adapter 计划输出。
 - `scripts/run_ablation_matrix.sh`：批量生成/运行消融计划的入口。
 - `baselines/`：已克隆并清理 Git 信息的顶会代码，用于 adapter 复用。
 
-## 云服务器准备
+## 环境准备
 
 ```bash
 cd /workspace/IAD/code/CERA-IAD
-export IAD_ROOT=/workspace/IAD
-export IAD_DATA=/data/iad
-export IAD_OUTPUTS=/workspace/IAD/outputs/cera_cloud
-export IAD_WEIGHTS=/workspace/IAD/code/CERA-IAD/weights/cache
 
-bash scripts/cloud_prepare.sh
+bash scripts/setup_env.sh
 ```
 
-依赖统一写在一个 `requirements.txt` 里。`cloud_prepare.sh` 会先按 CUDA 版本安装 PyTorch，再安装 `requirements.txt`。
+所有路径统一在 `configs/cera_iad_config.yaml` 中配置。依赖统一写在一个 `requirements.txt` 里。`setup_env.sh` 会先按 CUDA 版本安装 PyTorch，再安装 `requirements.txt`。
 
 下载基础权重：
 
@@ -52,7 +48,7 @@ bash weights/download_weights.sh --optional
 
 ## 模块替换方式
 
-默认模块在 `configs/cera_iad_cloud.yaml`：
+默认模块在 `configs/cera_iad_config.yaml`：
 
 ```yaml
 modules:
@@ -84,8 +80,8 @@ modules:
 单个消融 dry-run：
 
 ```bash
-python scripts/run_cera_cloud.py \
-  --config configs/cera_iad_cloud.yaml \
+python scripts/run_cera.py \
+  --config configs/cera_iad_config.yaml \
   --ablation A0_clip_only \
   --dry-run
 ```
@@ -119,7 +115,7 @@ bash scripts/run_ablation_matrix.sh
 - Qwen2.5-VL：`Qwen/Qwen2.5-VL-7B-Instruct`
 - InternVL2.5：`OpenGVLab/InternVL2_5-8B`
 
-数据集不由脚本下载。云端按 `IAD_DATA` 放置：
+数据集不由脚本下载。默认数据根目录在 `configs/cera_iad_config.yaml` 中配置为 `../../data`：
 
 ```text
 /data/iad/
@@ -133,10 +129,10 @@ bash scripts/run_ablation_matrix.sh
 
 ## 输出
 
-默认输出根目录：
+默认输出根目录在 `configs/cera_iad_config.yaml` 中配置：
 
 ```bash
-${IAD_OUTPUTS:-outputs/cera_cloud}
+../../outputs/cera_experiments
 ```
 
 建议保存：

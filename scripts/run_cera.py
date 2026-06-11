@@ -9,7 +9,7 @@ from typing import Any
 
 import yaml
 
-from cera_iad.modules.registry import assert_baseline_paths_exist, build_cloud_plan, registry_snapshot
+from cera_iad.modules.registry import assert_baseline_paths_exist, build_experiment_plan, registry_snapshot
 
 
 def _expand_env(value: Any) -> Any:
@@ -60,14 +60,14 @@ def write_json(path: str | Path, payload: dict[str, Any]) -> None:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Cloud orchestrator for CERA-IAD experiments.")
-    parser.add_argument("--config", default="configs/cera_iad_cloud.yaml")
+    parser = argparse.ArgumentParser(description="CERA-IAD experiment orchestrator.")
+    parser.add_argument("--config", default="configs/cera_iad_config.yaml")
     parser.add_argument("--ablation-matrix", default="configs/ablation_matrix.yaml")
     parser.add_argument("--ablation", default=None)
     parser.add_argument("--output-plan", default=None)
     parser.add_argument("--dry-run", action="store_true", help="Resolve modules and write plan only.")
     parser.add_argument("--print-registry", action="store_true")
-    parser.add_argument("--adapter-only", default=None, help="Reserved cloud adapter mode for upstream baselines.")
+    parser.add_argument("--adapter-only", default=None, help="Reserved adapter mode for upstream baselines.")
     parser.add_argument("--input-dir", default=None)
     parser.add_argument("--output", default=None)
     args = parser.parse_args()
@@ -78,9 +78,11 @@ def main() -> None:
 
     config = load_yaml(args.config)
     ablation = load_ablation(args.ablation_matrix, args.ablation)
-    plan = build_cloud_plan(config, ablation)
+    plan = build_experiment_plan(config, ablation)
 
-    repo_root = Path(os.environ.get("IAD_ROOT", Path.cwd()))
+    repo_root = Path(config.get("paths", {}).get("repo_root", "."))
+    if not repo_root.is_absolute():
+        repo_root = (Path(args.config).resolve().parent.parent / repo_root).resolve()
     missing = assert_baseline_paths_exist(repo_root)
     if missing:
         plan["missing_baseline_paths"] = missing
@@ -102,8 +104,8 @@ def main() -> None:
         return
 
     raise SystemExit(
-        "Cloud execution hooks are scaffolded but disabled in this local implementation. "
-        "Use --dry-run now; fill adapter commands on Ubuntu after datasets and weights are ready."
+        "Full execution is disabled until dataset/model adapter commands are implemented. "
+        "Use --dry-run to validate configuration and module wiring."
     )
 
 

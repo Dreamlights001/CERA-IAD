@@ -40,11 +40,6 @@ bash weights/download_weights.sh --optional
 weights/cache
 ```
 
-也可以用环境变量覆盖：
-
-```bash
-export IAD_WEIGHTS=/mnt/models/iad
-bash weights/download_weights.sh --basic
-```
+如需更改路径，请修改 `configs/cera_iad_config.yaml` 中的 `paths.weights_root`。
 
 数据集、闭源 API key 和各论文作者未公开的专用 checkpoint 不在本脚本内下载，请按对应 baseline README 单独配置。

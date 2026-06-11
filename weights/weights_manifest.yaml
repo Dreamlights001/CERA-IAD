@@ -1,4 +1,4 @@
-weights_root: ${IAD_WEIGHTS:-weights/cache}
+weights_root: weights/cache
 download_backend: huggingface-cli
 
 models:

@@ -2,7 +2,24 @@
 set -euo pipefail
 
 MODE="basic"
-WEIGHTS_ROOT="${IAD_WEIGHTS:-$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/cache}"
+CONFIG="${CONFIG:-configs/cera_iad_config.yaml}"
+PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+WEIGHTS_ROOT="$(python - "${PROJECT_ROOT}" "${CONFIG}" <<'PY'
+from pathlib import Path
+import sys
+import yaml
+
+project_root = Path(sys.argv[1]).resolve()
+config_path = Path(sys.argv[2])
+if not config_path.is_absolute():
+    config_path = project_root / config_path
+config = yaml.safe_load(config_path.read_text(encoding="utf-8")) or {}
+weights_root = Path(config.get("paths", {}).get("weights_root", "weights/cache"))
+if not weights_root.is_absolute():
+    weights_root = (project_root / weights_root).resolve()
+print(weights_root)
+PY
+)"
 
 usage() {
   cat <<'EOF'
@@ -15,7 +32,7 @@ Groups:
   --all       basic + optional + mllm.
 
 Environment:
-  IAD_WEIGHTS    Target cache directory. Default: weights/cache
+  CONFIG         Main config file. Default: configs/cera_iad_config.yaml
   HF_TOKEN       Optional Hugging Face token for gated/private repos.
 EOF
 }
