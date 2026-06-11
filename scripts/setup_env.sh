@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-ENV_NAME="${CERA_ENV_NAME:-cera-iad}"
+ENV_NAME="${CERA_ENV_NAME:-cera}"
 PYTHON_VERSION="${PYTHON_VERSION:-3.10}"
 CUDA_VERSION="${CUDA_VERSION:-cu121}"
 PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"

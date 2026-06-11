@@ -23,10 +23,12 @@ CERA-IAD 是面向 Ubuntu 的零样本工业异常检测研究代码库，集成
 ```bash
 cd /workspace/IAD/code/CERA-IAD
 
+conda create -y -n cera python=3.10
+conda activate cera
 bash scripts/setup_env.sh
 ```
 
-所有路径统一在 `configs/cera_iad_config.yaml` 中配置。依赖统一写在一个 `requirements.txt` 里。`setup_env.sh` 会先按 CUDA 版本安装 PyTorch，再安装 `requirements.txt`。
+所有路径统一在 `configs/cera_iad_config.yaml` 中配置。依赖统一写在一个 `requirements.txt` 里。`setup_env.sh` 使用当前激活的 `cera` conda 环境，先按 CUDA 版本安装 PyTorch，再安装 `requirements.txt`。
 
 下载基础权重：
 

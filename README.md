@@ -25,10 +25,12 @@ Run these commands from the project root:
 ```bash
 cd /workspace/IAD/code/CERA-IAD
 
+conda create -y -n cera python=3.10
+conda activate cera
 bash scripts/setup_env.sh
 ```
 
-Paths are configured in `configs/cera_iad_config.yaml`. Dependencies are listed in the single `requirements.txt` file. `setup_env.sh` installs PyTorch first with the CUDA-specific wheel index, then installs `requirements.txt`.
+Paths are configured in `configs/cera_iad_config.yaml`. Dependencies are listed in the single `requirements.txt` file. `setup_env.sh` uses the active `cera` conda environment, installs PyTorch first with the CUDA-specific wheel index, then installs `requirements.txt`.
 
 Download the basic weights:
 
