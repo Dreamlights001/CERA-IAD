@@ -1,0 +1,4 @@
+# Minimal dependencies for local static checks, dry-runs, and feature-level demos.
+numpy>=1.24
+PyYAML>=6.0
+

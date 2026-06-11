@@ -41,12 +41,8 @@ case "${CUDA_VERSION}" in
     ;;
 esac
 
-python -m pip install \
-  numpy scipy pandas scikit-learn scikit-image matplotlib pillow tqdm opencv-python \
-  einops timm transformers accelerate datasets huggingface_hub open_clip_torch \
-  ftfy regex yacs omegaconf hydra-core pyyaml gradio seaborn faiss-cpu
+python -m pip install -r "${IAD_ROOT}/requirements-cloud.txt"
 
-export PYTHONPATH="${IAD_ROOT}/code:${PYTHONPATH:-}"
+export PYTHONPATH="${IAD_ROOT}:${PYTHONPATH:-}"
 echo "[CERA-IAD] PYTHONPATH=${PYTHONPATH}"
 echo "[CERA-IAD] environment ready. Activate with: conda activate ${ENV_NAME}"
-

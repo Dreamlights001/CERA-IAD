@@ -1,0 +1,28 @@
+# Cloud experiment dependencies for Ubuntu + CUDA.
+# Install PyTorch separately via the CUDA-specific index in scripts/cloud_prepare.sh.
+-r requirements.txt
+
+scipy>=1.10
+pandas>=2.0
+scikit-learn>=1.3
+scikit-image>=0.21
+matplotlib>=3.7
+pillow>=10.0
+tqdm>=4.66
+opencv-python>=4.8
+einops>=0.7
+timm>=0.9
+transformers>=4.45
+accelerate>=0.33
+datasets>=2.20
+huggingface_hub>=0.24
+open_clip_torch>=2.24
+ftfy>=6.1
+regex>=2023.0
+yacs>=0.1.8
+omegaconf>=2.3
+hydra-core>=1.3
+gradio>=4.0
+seaborn>=0.13
+faiss-cpu>=1.8
+
