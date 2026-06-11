@@ -1,7 +1,7 @@
 # CERA-IAD dependencies.
 #
 # PyTorch is installed separately in scripts/cloud_prepare.sh so the wheel can
-# match the cloud server CUDA version (cpu/cu118/cu121/cu124). If you install
+# match the Ubuntu CUDA version (cpu/cu118/cu121/cu124). If you install
 # manually, install torch/torchvision/torchaudio first, then run:
 #
 #   python -m pip install -r requirements.txt
